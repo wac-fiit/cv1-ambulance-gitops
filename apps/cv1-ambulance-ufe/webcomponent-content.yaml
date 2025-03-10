@@ -5,6 +5,9 @@ metadata:
 spec:
   microFrontend: cv1-ambulance-ufe
   element: cv1-ambulance-wl-app
+  attributes:
+    - name: base-path
+      value: /cv1-ambulance-wl/
   displayRules:
     - allOf:
       - context-name: main-content
