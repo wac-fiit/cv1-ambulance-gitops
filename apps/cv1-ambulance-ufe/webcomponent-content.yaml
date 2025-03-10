@@ -4,7 +4,7 @@ metadata:
   name: cv1-ambulance-ufe-content
 spec:
   microFrontend: cv1-ambulance-ufe
-  element: cv1-ambulance-wl-list
+  element: cv1-ambulance-wl-app
   displayRules:
     - allOf:
       - context-name: main-content
