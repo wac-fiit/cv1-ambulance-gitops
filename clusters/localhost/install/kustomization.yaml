@@ -9,6 +9,11 @@ labels:
 
 resources:
 - ../../../apps/cv1-ambulance-ufe
+- ../../../apps/cv1-ambulance-webapi
+
+patches:
+- path: patches/ambulance-webapi.service.yaml
 
 components:
 - ../../../components/version-developers
+- https://github.com/wac-fiit/cv1-ambulance-webapi//deployments/kustomize/components/mongodb

@@ -4,3 +4,6 @@ images:
 - name: petermicuch/ambulance-ufe
   newName: petermicuch/ambulance-ufe # {"$imagepolicy":  "wac-hospital:ambulance-ufe:name"}
   newTag: main.20250317.1149 # {"$imagepolicy": "wac-hospital:ambulance-ufe:tag"}
+- name: petermicuch/ambulance-wl-webapi
+  newName: petermicuch/ambulance-wl-webapi # {"$imagepolicy":  "wac-hospital:ambulance-webapi:name"}
+  newTag: main # {"$imagepolicy": "wac-hospital:ambulance-webapi:tag"}
