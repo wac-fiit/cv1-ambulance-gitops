@@ -9,7 +9,7 @@ spec:
     - name: base-path
       value: /cv1-ambulance-wl/
     - name: api-base
-      value: http://local-k8s:30081/api
+      value: /cv1-api
     - name: ambulance-id
       value: bobulova
     
