@@ -5,6 +5,7 @@ resources:
 - namespace.yaml
 - ../../../infrastructure/polyfea
 - ../../../infrastructure/fluxcd
+- ../../../infrastructure/envoy-gateway
 
 components:
 - ../../../components/version-developers
