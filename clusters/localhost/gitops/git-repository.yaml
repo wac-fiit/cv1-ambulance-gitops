@@ -6,8 +6,6 @@ metadata:
 spec:
   interval: 1m0s
   ref:
-    branch: main
-  secretRef:
-    name: repository-pat
+    branch: milan/observability
   timeout: 1m0s
   url: https://github.com/wac-fiit/cv1-ambulance-gitops
