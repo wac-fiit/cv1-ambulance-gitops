@@ -6,6 +6,7 @@ resources:
 - ../../../infrastructure/polyfea
 - ../../../infrastructure/fluxcd
 - ../../../infrastructure/envoy-gateway
+- ../../../infrastructure/cert-manager
 
 components:
 - ../../../components/version-developers
