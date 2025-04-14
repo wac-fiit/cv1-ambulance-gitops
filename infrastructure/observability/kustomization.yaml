@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- https://github.com/wac-fiit/manifests//observability/gitops?ref=main
+# in case your cluster is too small (e.g. not enough CPU/memory on laptop) you may 
+# instead use following line to install only collector with exports into its log stream
+# - https://github.com/wac-fiit/manifests//observability/otel-collector-logging/gitops?ref=main
