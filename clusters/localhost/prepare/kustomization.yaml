@@ -9,8 +9,9 @@ resources:
 - ../../../infrastructure/observability
 
 configMapGenerator:
-  - name: otel-params  
-    namespace: wac-hospital 
+  - name: deployment-config 
+    namespace: observability
+    behavior: merge
     options:
       disableNameSuffixHash: true
     literals:
