@@ -8,9 +8,6 @@ resources:
 - ../../../infrastructure/envoy-gateway
 - ../../../infrastructure/observability
 
-components:
-- ../../../components/version-developers
-
 configMapGenerator:
   - name: otel-params  
     namespace: wac-hospital 
@@ -22,3 +19,6 @@ configMapGenerator:
     # or parentbased_always_on_sampler
       - OTEL_TRACES_SAMPLER=always_on
       - LOG_LEVEL=debug
+
+components:
+- ../../../components/version-developers
