@@ -1,0 +1,28 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: wac-hospital
+  namespace: wac-hospital
+spec:
+  logging:
+    level:
+      default: debug
+  telemetry:
+    tracing:
+      samplingRate: 100 # 100% for development purposes
+      provider:
+        backendRefs:
+        - kind: Service
+          name: otel-collector
+          namespace: observability
+          port: 4317
+        type: OpenTelemetry
+    metrics:
+      sinks:
+      - type: OpenTelemetry
+        openTelemetry:
+          backendRefs:
+          - kind: Service
+            name: otel-collector
+            namespace: observability
+            port: 4317
