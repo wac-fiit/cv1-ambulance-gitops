@@ -6,6 +6,7 @@ resources:
 - gateway-class.yaml
 - gateway.yaml
 - envoy-patch-policy.yaml
+- envoy-proxy.yaml
 
 configMapGenerator:
   - name: envoy-gateway-config

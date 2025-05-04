@@ -14,6 +14,11 @@ metadata:
     cert-manager.io/private-key-rotation-policy: Always
 spec:
   gatewayClassName: wac-hospital-gateway-class
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: wac-hospital
   listeners:
   - allowedRoutes:
         namespaces:
