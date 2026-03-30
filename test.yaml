@@ -1,0 +1,437 @@
+apiVersion: v1
+data:
+  collection: ambulance
+  database: cv1-ambulance
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/part-of: wac-hospital
+  name: cv1-ambulance-webapi-config-gck67dm74k
+  namespace: wac-hospital
+---
+apiVersion: v1
+data:
+  init-db.js: |-
+    const mongoHost = process.env.AMBULANCE_API_MONGODB_HOST
+    const mongoPort = process.env.AMBULANCE_API_MONGODB_PORT
+
+    const mongoUser = process.env.AMBULANCE_API_MONGODB_USERNAME
+    const mongoPassword = process.env.AMBULANCE_API_MONGODB_PASSWORD
+
+    const database = process.env.AMBULANCE_API_MONGODB_DATABASE
+    const collection = process.env.AMBULANCE_API_MONGODB_COLLECTION
+
+    const retrySeconds = parseInt(process.env.RETRY_CONNECTION_SECONDS || "5") || 5;
+
+    // try to connect to mongoDB until it is not available
+    let connection;
+    while(true) {
+        try {
+            connection = Mongo(`mongodb://${mongoUser}:${mongoPassword}@${mongoHost}:${mongoPort}`);
+            break;
+        } catch (exception) {
+            print(`Cannot connect to mongoDB: ${exception}`);
+            print(`Will retry after ${retrySeconds} seconds`)
+            sleep(retrySeconds * 1000);
+        }
+    }
+
+    // if database and collection exists, exit with success - already initialized
+    const databases = connection.getDBNames()
+    if (databases.includes(database)) {
+        const dbInstance = connection.getDB(database)
+        collections = dbInstance.getCollectionNames()
+        if (collections.includes(collection)) {
+          print(`Collection '${collection}' already exists in database '${database}'`)
+            process.exit(0);
+        }
+    }
+
+    // initialize
+    // create database and collection
+    const db = connection.getDB(database)
+    db.createCollection(collection)
+
+    // create indexes
+    db[collection].createIndex({ "id": 1 })
+
+    //insert sample data
+    let result = db[collection].insertMany([
+        {
+            "id": "bobulova",
+            "name": "Dr.Bobulová",
+            "roomNumber": "123",
+            "predefinedConditions": [
+                { "value": "Nádcha", "code": "rhinitis" },
+                { "value": "Kontrola", "code": "checkup" }
+            ]
+        }
+    ]);
+
+    if (result.writeError) {
+        console.error(result)
+        print(`Error when writing the data: ${result.errmsg}`)
+    }
+
+    // exit with success
+    process.exit(0);
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/part-of: wac-hospital
+  name: cv1-ambulance-webapi-mongodb-init-7d6bm6f4c5
+  namespace: wac-hospital
+---
+apiVersion: v1
+data:
+  host: mongodb
+  port: "27017"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/part-of: wac-hospital
+  name: mongodb-connection
+  namespace: wac-hospital
+---
+apiVersion: v1
+data:
+  password: YWRtaW4=
+  username: YWRtaW4=
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/part-of: wac-hospital
+  name: mongodb-auth
+  namespace: wac-hospital
+type: Opaque
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: cv1-ambulance-ufe
+    app.kubernetes.io/part-of: wac-hospital
+  name: cv1-ambulance-ufe
+  namespace: wac-hospital
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    pod: cv1-ambulance-ufe-label
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/part-of: wac-hospital
+  name: cv1-ambulance-webapi
+  namespace: wac-hospital
+spec:
+  ports:
+  - name: http
+    nodePort: 30081
+    port: 80
+    protocol: TCP
+    targetPort: webapi-port
+  selector:
+    pod: cv1-ambulance-webapi-label
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/part-of: wac-hospital
+  name: mongodb
+  namespace: wac-hospital
+spec:
+  ports:
+  - name: mongo
+    port: 27017
+    protocol: TCP
+  selector:
+    pod: mongodb
+  targetPort: mongodb-port
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/part-of: wac-hospital
+  name: mongo-pvc
+  namespace: wac-hospital
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: cv1-ambulance-ufe
+    app.kubernetes.io/part-of: wac-hospital
+  name: cv1-ambulance-ufe-deployment
+  namespace: wac-hospital
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod: cv1-ambulance-ufe-label
+  template:
+    metadata:
+      labels:
+        pod: cv1-ambulance-ufe-label
+    spec:
+      containers:
+      - image: petermicuch/ambulance-ufe:main.20260323.1009
+        imagePullPolicy: Always
+        name: ambulance-ufe-container
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          limits:
+            cpu: "0.3"
+            memory: 320M
+          requests:
+            cpu: "0.1"
+            memory: 32M
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/part-of: wac-hospital
+  name: cv1-ambulance-webapi
+  namespace: wac-hospital
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod: cv1-ambulance-webapi-label
+  template:
+    metadata:
+      labels:
+        pod: cv1-ambulance-webapi-label
+    spec:
+      containers:
+      - env:
+        - name: AMBULANCE_API_MONGODB_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: host
+              name: mongodb-connection
+        - name: AMBULANCE_API_MONGODB_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: port
+              name: mongodb-connection
+        - name: AMBULANCE_API_MONGODB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: mongodb-auth
+        - name: AMBULANCE_API_MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: mongodb-auth
+        - name: AMBULANCE_API_ENVIRONMENT
+          value: production
+        - name: AMBULANCE_API_PORT
+          value: "8080"
+        - name: AMBULANCE_API_MONGODB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              key: database
+              name: cv1-ambulance-webapi-config-gck67dm74k
+        - name: AMBULANCE_API_MONGODB_COLLECTION
+          valueFrom:
+            configMapKeyRef:
+              key: collection
+              name: cv1-ambulance-webapi-config-gck67dm74k
+        - name: AMBULANCE_API_MONGODB_TIMEOUT_SECONDS
+          value: "5"
+        image: petermicuch/ambulance-wl-webapi:main
+        imagePullPolicy: Always
+        name: cv1-ambulance-wl-webapi-container
+        ports:
+        - containerPort: 8080
+          name: webapi-port
+        resources:
+          limits:
+            cpu: "0.3"
+            memory: 512Mi
+          requests:
+            cpu: "0.01"
+            memory: 64Mi
+      - env:
+        - name: PORT
+          value: "8081"
+        - name: URL
+          value: /openapi
+        - name: BASE_URL
+          value: /openapi-ui
+        - name: FILTER
+          value: "true"
+        - name: DISPLAY_OPERATION_ID
+          value: "true"
+        image: swaggerapi/swagger-ui
+        imagePullPolicy: Always
+        name: openapi-ui
+        ports:
+        - containerPort: 8081
+          name: api-ui
+        resources:
+          limits:
+            cpu: "0.1"
+            memory: 64M
+          requests:
+            cpu: "0.01"
+            memory: 16M
+      initContainers:
+      - env:
+        - name: AMBULANCE_API_MONGODB_HOST
+          valueFrom:
+            configMapKeyRef:
+              key: host
+              name: mongodb-connection
+        - name: AMBULANCE_API_MONGODB_PORT
+          valueFrom:
+            configMapKeyRef:
+              key: port
+              name: mongodb-connection
+        - name: AMBULANCE_API_MONGODB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: mongodb-auth
+        - name: AMBULANCE_API_MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: mongodb-auth
+        name: init-mongodb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/part-of: wac-hospital
+  name: mongodb
+  namespace: wac-hospital
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod: mongodb
+  template:
+    metadata:
+      labels:
+        pod: mongodb
+    spec:
+      containers:
+      - env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: username
+              name: mongodb-auth
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: mongodb-auth
+        image: mongo:latest
+        imagePullPolicy: Always
+        name: mongodb
+        ports:
+        - containerPort: 27017
+          name: mongodb-port
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: 4Gi
+          requests:
+            cpu: "0.1"
+            memory: 1Gi
+        volumeMounts:
+        - mountPath: /data/db
+          name: db-data
+      volumes:
+      - name: db-data
+        persistentVolumeClaim:
+          claimName: mongo-pvc
+---
+apiVersion: polyfea.github.io/v1alpha1
+kind: MicroFrontend
+metadata:
+  labels:
+    app.kubernetes.io/component: cv1-ambulance-ufe
+    app.kubernetes.io/part-of: wac-hospital
+  name: cv1-ambulance-ufe
+  namespace: wac-hospital
+spec:
+  frontendClass: md-shell
+  modulePath: build/ambulance-ufe.esm.js
+  service:
+    name: cv1-ambulance-ufe
+---
+apiVersion: polyfea.github.io/v1alpha1
+kind: WebComponent
+metadata:
+  labels:
+    app.kubernetes.io/component: cv1-ambulance-ufe
+    app.kubernetes.io/part-of: wac-hospital
+  name: cv1-ambulance-ufe-content
+  namespace: wac-hospital
+spec:
+  attributes:
+  - name: base-path
+    value: ./cv1-ambulance-wl/
+  - name: api-base
+    value: http://192.168.15.10:30081/api
+  - name: ambulance-id
+    value: bobulova
+  displayRules:
+  - allOf:
+    - context-name: main-content
+    - path: ^(\.?/)?cv1-ambulance-wl(/.*)?$
+  element: cv1-ambulance-wl-app
+  microFrontend: cv1-ambulance-ufe
+---
+apiVersion: polyfea.github.io/v1alpha1
+kind: WebComponent
+metadata:
+  labels:
+    app.kubernetes.io/component: cv1-ambulance-ufe
+    app.kubernetes.io/part-of: wac-hospital
+  name: cv1-ambulance-ufe-link
+  namespace: wac-hospital
+spec:
+  attributes:
+  - name: headline
+    value: Zoznam čakajúcich cv1
+  - name: short-headline
+    value: Zoznam čakajúcich cv1
+  - name: supporting-text
+    value: |
+      Spravuje zoznam pacientov čakajúcich na vyšetrenie v ambulancii
+  - name: material-icon
+    value: home_health
+  - name: href
+    value: ./cv1-ambulance-wl
+  displayRules:
+  - anyOf:
+    - context-name: applications
+    - context-name: rail-content
+    - context-name: drawer-content
+  element: polyfea-md-app
+  microFrontend: polyfea-md-shell
+  priority: 10

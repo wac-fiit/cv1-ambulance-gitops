@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
 - ../../../infrastructure/polyfea
 - ../../../infrastructure/fluxcd
+- ../../../infrastructure/envoy-gateway
