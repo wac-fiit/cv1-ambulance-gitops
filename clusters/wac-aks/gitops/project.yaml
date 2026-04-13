@@ -1,0 +1,12 @@
+apiVersion: wac-fiit.github.io/v1alpha1
+kind: Project
+metadata:
+  name: cv1-ambulance-wl
+spec:
+  title: "Zoznam čakajúcich cv1"
+  description: "Spravuje zoznam pacientov čakajúcich na vyšetrenie v ambulancii"
+  authors: "Peter Micuch"
+  azureLink: "https://cv11-ambulance.azurewebsites.net"
+  frontendRepoUrl: "https://github.com/wac-fiit/cv1-ambulance-ufe"
+  backendRepoUrl: "https://github.com/wac-fiit/cv1-ambulance-webapi"
+  gitopsRepoUrl: "https://github.com/wac-fiit/cv1-ambulance-gitops"

@@ -6,6 +6,7 @@ labels:
       app.kubernetes.io/name: cv1-apps
       app.kubernetes.io/instance: release
       app.kubernetes.io/version: "1.0.0"
+      wac-fiit.github.io/project: cv1-ambulance-wl
 
 resources:
   - gitops
