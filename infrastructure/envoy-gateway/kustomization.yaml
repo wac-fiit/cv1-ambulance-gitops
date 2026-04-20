@@ -7,3 +7,4 @@ resources:
 - gateway.yaml
 - authn.security-policy.yaml
 - oidc-callback.http-route.yaml
+- envoy-proxy.yaml

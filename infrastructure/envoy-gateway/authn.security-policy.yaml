@@ -45,6 +45,15 @@ spec:
         name: dex-sso
         remoteJWKS:
           uri: http://dex.wac-hospital:5556/dex/keys
+    extAuth:
+      grpc:
+        backendRefs:
+          - name: opa-plugin
+            port: 9191
+      headersToExtAuth:
+        - x-forwarded-preferred-username
+        - x-forwarded-user
+        - x-forwarded-email
 ---
 # Tato policy je viac špecifická (htt-route > gateway)
 # a preto bude mať prednosť pred authn policy

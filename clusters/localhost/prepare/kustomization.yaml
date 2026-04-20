@@ -7,3 +7,4 @@ resources:
 - ../../../infrastructure/envoy-gateway
 - ../../../infrastructure/cert-manager
 - ../../../infrastructure/dex
+- ../../../infrastructure/opa-plugin
