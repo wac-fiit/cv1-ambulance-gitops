@@ -6,3 +6,4 @@ resources:
 - ../../../infrastructure/fluxcd
 - ../../../infrastructure/envoy-gateway
 - ../../../infrastructure/cert-manager
+- ../../../infrastructure/dex

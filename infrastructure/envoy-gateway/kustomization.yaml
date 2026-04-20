@@ -5,3 +5,5 @@ resources:
 - https://github.com/envoyproxy/gateway/releases/download/v1.7.1/install.yaml
 - gateway-class.yaml
 - gateway.yaml
+- authn.security-policy.yaml
+- oidc-callback.http-route.yaml
