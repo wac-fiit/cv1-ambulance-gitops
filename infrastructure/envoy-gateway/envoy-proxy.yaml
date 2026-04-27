@@ -9,3 +9,25 @@ spec:
   filterOrder:
     - name: envoy.filters.http.ext_authz
       after: envoy.filters.http.jwt_authn
+  logging:
+    level:
+     default: debug
+  telemetry:
+    tracing:
+      samplingRate: 100 # 100% for development purposes
+      provider:
+        backendRefs:
+        - kind: Service
+          name: otel-collector
+          namespace: observability
+          port: 4317
+        type: OpenTelemetry
+    metrics:
+      sinks:
+      - type: OpenTelemetry
+        openTelemetry:
+          backendRefs:
+          - kind: Service
+            name: otel-collector
+            namespace: observability
+            port: 4317
