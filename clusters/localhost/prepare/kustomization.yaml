@@ -8,3 +8,4 @@ resources:
 - ../../../infrastructure/cert-manager
 - ../../../infrastructure/dex
 - ../../../infrastructure/opa-plugin
+- ../../../infrastructure/observability
